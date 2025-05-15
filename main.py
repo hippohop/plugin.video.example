@@ -1,109 +1,97 @@
 
-# Hroch Cinema – Kodi doplněk s vyhledáváním přes TMDb a přehráváním z Webshare
-
-import sys
-import xbmc
-import xbmcgui
 import xbmcplugin
+import xbmcgui
 import xbmcaddon
+import sys
+import urllib.parse
+from tmdbhelper import TMDB
 import requests
-from urllib.parse import quote_plus, parse_qs
-import xml.etree.ElementTree as ET
+import re
 
-try:
-    from thetmdb import TMDbHelper
-except ImportError:
-    xbmcgui.Dialog().notification("Hroch Cinema", "Chybí doplněk TMDb Helper!", xbmcgui.NOTIFICATION_ERROR)
-    sys.exit()
+addon = xbmcaddon.Addon()
+addon_handle = int(sys.argv[1])
+base_url = sys.argv[0]
+args = sys.argv[2]
 
-tmdb = TMDbHelper()
-tmdb.language = "cs"
+# TMDb Helper
+tmdb = TMDB('movie', language='cs')
 
-ADDON = xbmcaddon.Addon()
-HANDLE = int(sys.argv[1])
-BASE_URL = "https://webshare.cz"
-API_URL = BASE_URL + "/api/"
+def build_url(query):
+    return base_url + '?' + urllib.parse.urlencode(query)
 
-def log(msg, level=xbmc.LOGDEBUG):
-    xbmc.log(f"[HrochCinema] {msg}", level)
-
-def get_token():
-    username = ADDON.getSetting("ws_user")
-    password = ADDON.getSetting("ws_pass")
-    if not username or not password:
-        log("Chybí přihlašovací údaje Webshare", xbmc.LOGERROR)
-        return None
-    response = requests.post(API_URL + "login/", data={"username": username, "password": password})
-    result = response.json()
-    return result.get("token")
+def get_search_query():
+    keyboard = xbmcgui.Dialog().input("Zadej název filmu", type=xbmcgui.INPUT_ALPHANUM)
+    return keyboard
 
 def search_tmdb(query):
     results = tmdb.search(query)
-    if not results:
-        log(f"Nic nenalezeno pro: {query}", xbmc.LOGWARNING)
-        return []
-    log(f"Nalezeno výsledků: {len(results)}", xbmc.LOGINFO)
     return results
 
-def search_webshare(title, token):
-    response = requests.get(API_URL + "file/find/", params={"search": title, "show": "all", "page": 1, "limit": 50, "wst": token})
-    return response.json().get("files", [])
+def search_webshare(title):
+    session = requests.Session()
+    username = addon.getSetting('ws_user')
+    password = addon.getSetting('ws_pass')
 
-def filter_results(results):
-    filtered = []
-    for r in results:
-        name = r.get("name", "").lower()
-        if any(res in name for res in ["2160p", "1080p"]) and ("cz" in name or "czech" in name):
-            filtered.append(r)
-    return filtered
+    login_data = {
+        'username': username,
+        'password': password
+    }
 
-def select_result(results):
-    labels = [r.get("name", "Neznámý soubor") for r in results]
-    index = xbmcgui.Dialog().select("Vyber releas", labels)
-    return results[index] if index >= 0 else None
+    login_response = session.post('https://webshare.cz/api/login/', data=login_data)
+    token = login_response.json().get('token')
 
-def play_file(file_info, token):
-    file_id = file_info.get("ident")
-    if not file_id:
-        log("Soubor nemá ID", xbmc.LOGERROR)
-        return
-    stream_url = f"https://webshare.cz/api/file/link/?ident={file_id}&wst={token}"
-    response = requests.get(stream_url)
-    link = response.json().get("link")
-    if not link:
-        log("Nelze získat odkaz ke streamu", xbmc.LOGERROR)
-        return
-    li = xbmcgui.ListItem(path=link)
-    xbmcplugin.setResolvedUrl(HANDLE, True, li)
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
 
-def run():
-    query = xbmcgui.Dialog().input("Zadej název filmu")
-    if not query:
-        return
+    search_response = session.get(f'https://webshare.cz/api/file/find?query={urllib.parse.quote(title)}', headers=headers)
+    files = search_response.json().get('data', [])
+    return files
 
-    results = search_tmdb(query)
-    if not results:
-        return
+def filter_results(files):
+    preferred = []
+    for f in files:
+        name = f.get('name', '').lower()
+        if any(res in name for res in ['2160p', '1080p']) and ('cz' in name or 'czech' in name):
+            preferred.append(f)
+    return preferred if preferred else files
 
-    first = results[0]
-    title = first.get("title", "")
-    log(f"Vybraný titul z TMDb: {title}")
+def list_tmdb_results(results):
+    for result in results:
+        title = result.get('title') or result.get('name')
+        year = result.get('release_date', '')[:4]
+        poster = result.get('poster_path', '')
+        tmdb_id = result.get('id')
 
-    token = get_token()
-    if not token:
-        return
+        list_item = xbmcgui.ListItem(label=f"{title} ({year})")
+        list_item.setArt({'thumb': f"https://image.tmdb.org/t/p/w500{poster}"})
 
-    releases = search_webshare(title, token)
-    log(f"Nalezeno {len(releases)} releasů na Webshare")
+        url = build_url({'action': 'select_release', 'title': title})
+        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=True)
+    xbmcplugin.endOfDirectory(addon_handle)
 
-    filtered = filter_results(releases)
-    if not filtered:
-        xbmcgui.Dialog().notification("Hroch Cinema", "Nenalezeny releasy s CZ a požadovanou kvalitou", xbmcgui.NOTIFICATION_INFO)
-        return
+def list_releases(releases):
+    for file in releases:
+        name = file.get('name')
+        url = file.get('link')
+        list_item = xbmcgui.ListItem(label=name)
+        list_item.setProperty('IsPlayable', 'true')
+        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=False)
+    xbmcplugin.endOfDirectory(addon_handle)
 
-    selected = select_result(filtered)
-    if selected:
-        play_file(selected, token)
+def router(params):
+    if not params:
+        query = get_search_query()
+        if not query:
+            return
+        results = search_tmdb(query)
+        list_tmdb_results(results)
+    elif params.get('action') == 'select_release':
+        title = params.get('title')
+        files = search_webshare(title)
+        filtered = filter_results(files)
+        list_releases(filtered)
 
-if __name__ == "__main__":
-    run()
+if __name__ == '__main__':
+    param_dict = dict(urllib.parse.parse_qsl(args[1:]))
+    router(param_dict)
