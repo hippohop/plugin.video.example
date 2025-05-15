@@ -1,4 +1,5 @@
 # Hroch Cinema – Kodi doplněk s vyhledáváním přes TMDb a přehráváním z Webshare
+import xbmc
 
 import sys
 import xbmc
