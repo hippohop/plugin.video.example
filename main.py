@@ -96,10 +96,7 @@ def router(params):
         filtered = filter_results(releases)
         list_releases(filtered)
 
-if __name__ == "__main__":
-    params = dict(urllib.parse.parse_qsl(args[1:]))
-    router(params)
-
-if __name__ == '__main__':
-    param_dict = dict(urllib.parse.parse_qsl(args[1:]))
-    router(param_dict)
+# Spuštění doplňku
+log("Spouštím doplněk Hroch Cinema")
+params = dict(urllib.parse.parse_qsl(args[1:]))
+router(params)
