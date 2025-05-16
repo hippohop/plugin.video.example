@@ -8,6 +8,8 @@ import urllib.parse
 import requests
 from tmdbhelper import TMDB
 
+xbmc.log("[HROCH CINEMA] Startuji main.py", xbmc.LOGNOTICE)
+
 addon = xbmcaddon.Addon()
 addon_handle = int(sys.argv[1])
 base_url = sys.argv[0]
