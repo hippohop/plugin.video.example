@@ -1,39 +1,37 @@
+# -*- coding: utf-8 -*-
+import sys
 import xbmc
 import xbmcgui
 import xbmcplugin
-import xbmcaddon
-import sys
+import urllib.parse
 
-# Initialize addon
-_addon = xbmcaddon.Addon()
-_handle = int(sys.argv[1])
+ADDON_HANDLE = int(sys.argv[1])
+BASE_URL = sys.argv[0]
 
-def ask(what=None):
-    # This will open the Kodi Keyboard dialog for the user to input the movie name.
-    kb = xbmc.Keyboard(what, _addon.getLocalizedString(30007))  # "Search for movie"
-    kb.doModal()
-    if kb.isConfirmed():
-        return kb.getText()  # User input
-    return None
+def build_url(query):
+    return BASE_URL + '?' + urllib.parse.urlencode(query)
 
-def search_movie():
-    # Ask the user for the movie name
-    search_query = ask()
-    if search_query:
-        xbmc.log(f"[HROCH CINEMA] Searching for: {search_query}", xbmc.LOGNOTICE)
-        # Call your TMDb search function here
-        # For example: search_tmdb(search_query)
+def router(paramstring):
+    params = dict(urllib.parse.parse_qsl(paramstring))
+    xbmc.log(f"[HROCH CINEMA] Routing params: {params}", xbmc.LOGNOTICE)
+    
+    if params.get('action') == 'search':
+        show_search_dialog()
+    else:
+        # Defaultní akce: otevřít dialog hledání
+        show_search_dialog()
 
-def search_tmdb(query):
-    # Here you would integrate your TMDb search logic
-    # Example: fetch results from TMDb API and show them
-    xbmc.log(f"[HROCH CINEMA] Performing TMDb search for: {query}", xbmc.LOGNOTICE)
-    # Your TMDb API request and result handling goes here
+def show_search_dialog():
+    keyboard = xbmcgui.Dialog().input("Zadej název filmu", type=xbmcgui.INPUT_ALPHANUM)
+    if keyboard:
+        # V tuto chvíli vypíšeme pouze zadaný název, později zde bude hledání přes TMDb
+        xbmc.log(f"[HROCH CINEMA] Hledání pro: {keyboard}", xbmc.LOGNOTICE)
+        list_item = xbmcgui.ListItem(label=f"Hledání: {keyboard}")
+        url = build_url({'action': 'search', 'query': keyboard})
+        xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url=url, listitem=list_item, isFolder=True)
+        xbmcplugin.endOfDirectory(ADDON_HANDLE)
+    else:
+        xbmcplugin.endOfDirectory(ADDON_HANDLE, succeeded=False)
 
-def main():
-    # This function will run when the plugin is triggered
-    xbmc.log("[HROCH CINEMA] Starting main plugin", xbmc.LOGNOTICE)
-    search_movie()  # Start the search process
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    router(sys.argv[2][1:])
