@@ -6,7 +6,7 @@ import xbmcaddon
 import xbmc
 
 addon_handle = int(sys.argv[1])
-args = sys.argv[2]
+args = sys.argv[2] if len(sys.argv) > 2 else ""
 addon = xbmcaddon.Addon()
 
 def log(msg):
@@ -29,5 +29,6 @@ def router(params):
         return
 
 log("Startuji main.py")
+log(f"sys.argv: {sys.argv}")
 params = dict(urllib.parse.parse_qsl(args[1:]))
 router(params)
