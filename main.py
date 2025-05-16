@@ -37,4 +37,10 @@ def router(paramstring):
         xbmcplugin.endOfDirectory(ADDON_HANDLE)
 
 if __name__ == '__main__':
-    router(sys.argv[2][1:])
+    try:
+        param_string = sys.argv[2][1:] if len(sys.argv) > 2 else ''
+        router(param_string)
+    except Exception as e:
+        xbmc.log(f"[HROCH CINEMA] CHYBA: {str(e)}", xbmc.LOGERROR)
+        xbmcgui.Dialog().notification("Hroch Cinema", "Došlo k chybě při spuštění.", xbmcgui.NOTIFICATION_ERROR)
+
