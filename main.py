@@ -1,13 +1,25 @@
 import sys
+import urllib.parse
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import xbmc
 
-log("Spouštím doplněk Hroch Cinema")
-params = dict(urllib.parse.parse_qsl(sys.argv[2][1:]))
-router(params)
+# Inicializace
+addon_handle = int(sys.argv[1])
+args = sys.argv[2]
+addon = xbmcaddon.Addon()
+
+def log(msg):
+    xbmc.log(f"[HROCH CINEMA] {msg}", xbmc.LOGNOTICE)
+
+def build_url(query):
+    return sys.argv[0] + '?' + urllib.parse.urlencode(query)
 
 def router(params):
     log(f"Routing parametry: {params}")
     if not params:
-        # Zobraz položku pro vyhledávání jako adresářovou položku
+        # Hlavní menu – položka pro vyhledávání
         url = build_url({"action": "search"})
         list_item = xbmcgui.ListItem(label="🔍 Vyhledat film")
         xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=True)
@@ -15,18 +27,11 @@ def router(params):
         return
 
     if params.get("action") == "search":
-        query = get_search_query()
-        if not query:
-            return
-        results = search_tmdb(query)
-        list_tmdb_results(results)
+        # Tady později přidáme vyhledávací dialog
+        xbmcgui.Dialog().ok("Hroch Cinema", "Zde bude vyhledávání filmu...")
+        return
 
-    elif params.get("action") == "select_release":
-        title = params.get("title")
-        releases = search_webshare(title)
-        filtered = filter_results(releases)
-        list_releases(filtered)
-
-log("Spouštím doplněk Hroch Cinema")
+# Hlavní vstup
+log("Startuji main.py")
 params = dict(urllib.parse.parse_qsl(args[1:]))
 router(params)
