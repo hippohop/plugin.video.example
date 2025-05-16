@@ -5,7 +5,6 @@ import xbmcgui
 import xbmcaddon
 import xbmc
 
-# Inicializace
 addon_handle = int(sys.argv[1])
 args = sys.argv[2]
 addon = xbmcaddon.Addon()
@@ -18,17 +17,9 @@ def build_url(query):
 
 def router(params):
     log(f"Routing parametry: {params}")
-    
-    if not params:
-        # Zobrazíme hlavní položku – Vyhledávání
-        url = build_url({"action": "search"})
-        list_item = xbmcgui.ListItem(label="🔍 Vyhledat film")
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=True)
-        xbmcplugin.endOfDirectory(addon_handle)
-        return
 
-    if params.get("action") == "search":
-        # Otevřít dialog pro zadání názvu
+    action = params.get("action")
+    if action == "search" or not action:
         keyboard = xbmcgui.Dialog().input("Zadej název filmu", type=xbmcgui.INPUT_ALPHANUM)
         if keyboard:
             log(f"Zadán hledaný výraz: {keyboard}")
@@ -36,11 +27,6 @@ def router(params):
         else:
             log("Uživatel zrušil hledání.")
         return
-
-# Hlavní vstup
-log("Startuji main.py")
-params = dict(urllib.parse.parse_qsl(args[1:]))
-router(params)
 
 log("Startuji main.py")
 params = dict(urllib.parse.parse_qsl(args[1:]))
