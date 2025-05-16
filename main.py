@@ -1,3 +1,9 @@
+import sys
+
+log("Spouštím doplněk Hroch Cinema")
+params = dict(urllib.parse.parse_qsl(sys.argv[2][1:]))
+router(params)
+
 def router(params):
     log(f"Routing parametry: {params}")
     if not params:
