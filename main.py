@@ -18,11 +18,12 @@ def build_url(query):
 
 def router(params):
     log(f"Routing parametry: {params}")
+    
     if not params:
-        # Hlavní menu – položka pro vyhledávání
+        # Zobrazíme hlavní položku – Vyhledávání
         url = build_url({"action": "search"})
         list_item = xbmcgui.ListItem(label="🔍 Vyhledat film")
-        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=False)
+        xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=list_item, isFolder=True)
         xbmcplugin.endOfDirectory(addon_handle)
         return
 
