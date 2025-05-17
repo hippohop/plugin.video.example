@@ -16,13 +16,12 @@ def build_url(query):
     return BASE_URL + '?' + urllib.parse.urlencode(query)
 
 def show_search_dialog():
-    keyboard = xbmcgui.Dialog().input("Zadej název filmu", type=xbmcgui.INPUT_ALPHANUM)
-    if keyboard:
-        xbmc.log(f"[HROCH CINEMA] Hledání pro: {keyboard}", xbmc.LOGINFO)
-        list_item = xbmcgui.ListItem(label=f"Výsledek hledání: {keyboard}")
-        list_item.setInfo('video', {'title': keyboard})
-        xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url="", listitem=list_item, isFolder=False)
-    xbmcplugin.endOfDirectory(ADDON_HANDLE)
+    query = xbmcgui.Dialog().input("Hledat film na TMDb", type=xbmcgui.INPUT_ALPHANUM)
+    if query:
+        xbmc.log(f"[HROCH CINEMA] Vyhledávání přes TMDb Helper: {query}", xbmc.LOGINFO)
+        encoded_query = urllib.parse.quote_plus(query)
+        url = f'plugin://plugin.video.themoviedb.helper/?action=search&query={encoded_query}'
+        xbmc.executebuiltin(f'RunPlugin("{url}")')
 
 def router(paramstring):
     xbmcplugin.setPluginCategory(ADDON_HANDLE, "Hroch Cinema")
