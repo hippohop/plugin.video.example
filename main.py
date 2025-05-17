@@ -5,8 +5,12 @@ import xbmcgui
 import xbmcplugin
 import urllib.parse
 
-ADDON_HANDLE = int(sys.argv[1])
-BASE_URL = sys.argv[0]
+try:
+    ADDON_HANDLE = int(sys.argv[1])
+    BASE_URL = sys.argv[0]
+except Exception as e:
+    xbmcgui.Dialog().notification("Hroch Cinema", f"CHYBA INIT: {str(e)}", xbmcgui.NOTIFICATION_ERROR)
+    raise
 
 def build_url(query):
     return BASE_URL + '?' + urllib.parse.urlencode(query)
@@ -30,7 +34,6 @@ def router(paramstring):
     if params.get('action') == 'search':
         show_search_dialog()
     else:
-        # Hlavní menu s možností hledání
         list_item = xbmcgui.ListItem(label="🔍 Hledat film")
         url = build_url({'action': 'search'})
         xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url=url, listitem=list_item, isFolder=True)
@@ -42,5 +45,4 @@ if __name__ == '__main__':
         router(param_string)
     except Exception as e:
         xbmc.log(f"[HROCH CINEMA] CHYBA: {str(e)}", xbmc.LOGERROR)
-        xbmcgui.Dialog().notification("Hroch Cinema", "Došlo k chybě při spuštění.", xbmcgui.NOTIFICATION_ERROR)
-
+        xbmcgui.Dialog().notification("CHYBA MAIN", f"{str(e)}", xbmcgui.NOTIFICATION_ERROR)
