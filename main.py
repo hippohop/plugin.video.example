@@ -18,7 +18,7 @@ def build_url(query):
 def show_search_dialog():
     keyboard = xbmcgui.Dialog().input("Zadej název filmu", type=xbmcgui.INPUT_ALPHANUM)
     if keyboard:
-        xbmc.log(f"[HROCH CINEMA] Hledání pro: {keyboard}", xbmc.LOGNOTICE)
+        xbmc.log(f"[HROCH CINEMA] Hledání pro: {keyboard}", xbmc.LOGINFO)
         list_item = xbmcgui.ListItem(label=f"Výsledek hledání: {keyboard}")
         list_item.setInfo('video', {'title': keyboard})
         xbmcplugin.addDirectoryItem(handle=ADDON_HANDLE, url="", listitem=list_item, isFolder=False)
@@ -29,7 +29,7 @@ def router(paramstring):
     xbmcplugin.setContent(ADDON_HANDLE, 'videos')
 
     params = dict(urllib.parse.parse_qsl(paramstring))
-    xbmc.log(f"[HROCH CINEMA] Routing params: {params}", xbmc.LOGNOTICE)
+    xbmc.log(f"[HROCH CINEMA] Routing params: {params}", xbmc.LOGINFO)
 
     if params.get('action') == 'search':
         show_search_dialog()
