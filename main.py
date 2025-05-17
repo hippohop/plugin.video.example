@@ -4,6 +4,7 @@ import xbmc
 import xbmcgui
 import urllib.parse
 import os
+import xbmcvfs
 
 def show_search_dialog():
     query = xbmcgui.Dialog().input("Hledat film na TMDb", type=xbmcgui.INPUT_ALPHANUM)
