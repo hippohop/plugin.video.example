@@ -9,7 +9,7 @@ def show_search_dialog():
         xbmc.log(f"[HROCH CINEMA] Vyhledávání přes TMDb Helper (výsledky): {query}", xbmc.LOGINFO)
         encoded_query = urllib.parse.quote_plus(query)
         url = f'plugin://plugin.video.themoviedb.helper/?action=search_movies&query={encoded_query}'
-        xbmc.executebuiltin(f'ActivateWindow(Videos,"{url}",return)')
+        xbmc.executebuiltin(f'RunPlugin("{url}")')
 
 if __name__ == '__main__':
     try:
