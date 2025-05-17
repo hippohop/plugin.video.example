@@ -6,7 +6,6 @@ import urllib.parse
 def show_search_dialog():
     query = xbmcgui.Dialog().input("Hledat film na TMDb", type=xbmcgui.INPUT_ALPHANUM)
     if query:
-        xbmc.log(f"[HROCH CINEMA] Vyhledávání přes TMDb Helper (výsledky): {query}", xbmc.LOGINFO)
         encoded_query = urllib.parse.quote_plus(query)
         url = f'plugin://plugin.video.themoviedb.helper/?action=search_movies&query={encoded_query}'
         xbmc.executebuiltin(f'Container.Update("{url}", replace)')
