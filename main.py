@@ -3,18 +3,14 @@ import sys
 import xbmc
 import xbmcgui
 import urllib.parse
+import os
 
 def show_search_dialog():
     query = xbmcgui.Dialog().input("Hledat film na TMDb", type=xbmcgui.INPUT_ALPHANUM)
     if query:
-        encoded_query = urllib.parse.quote_plus(query)
-        url = f'plugin://plugin.video.themoviedb.helper/?action=search_movies&query={encoded_query}'
-        xbmc.sleep(500)  # počkej 0,5 sekundy, než se klávesnice zavře
-        xbmc.executebuiltin(f'ActivateWindow(Videos, "{url}")')
+        script = xbmcvfs.translatePath("special://home/addons/plugin.video.hrochcinema/search_launcher.py")
+        xbmc.executebuiltin(f'RunScript("{script}", "{query}")')
 
 if __name__ == '__main__':
-    try:
-        show_search_dialog()
-    except Exception as e:
-        xbmc.log(f"[HROCH CINEMA] CHYBA: {str(e)}", xbmc.LOGERROR)
-        xbmcgui.Dialog().notification("CHYBA TMDb", f"{str(e)}", xbmcgui.NOTIFICATION_ERROR)
+    show_search_dialog()
+   
